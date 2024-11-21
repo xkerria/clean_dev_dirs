@@ -50,18 +50,22 @@ chmod +x clean_dev_dirs
 将要清理的目录统计：
 node_modules: 2 个
 dist: 1 个
+
 将要清理的文件统计：
 .DS_Store: 3 个
 .pyc: 5 个
+
 找到以下目录：
 ./project/node_modules
 ./apps/node_modules
 ./project/dist
+
 找到以下文件：
 ./project/.DS_Store
 ./apps/.DS_Store
 ./src/.DS_Store
 ./src/test.pyc
+
 是否删除这些内容？(y/N)
 ```
 
