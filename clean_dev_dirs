@@ -1,0 +1,128 @@
+#!/bin/zsh
+
+clean_dev_dirs () {
+    # 定义颜色代码
+    local RED='\033[0;31m'
+    local GREEN='\033[0;32m'
+    local YELLOW='\033[1;33m'
+    local BLUE='\033[0;34m'
+    local MAGENTA='\033[0;35m'
+    local CYAN='\033[0;36m'
+    local NC='\033[0m' # No Color
+    local BOLD='\033[1m'
+
+    # 列出将要删除的目录名称
+    local dirs_to_clean=(
+        'node_modules'     # Node.js 依赖
+        'dist'            # 构建输出
+        'vendor'          # 第三方依赖
+        '__pycache__'     # Python 缓存
+        '.venv'           # Python 虚拟环境
+        'build'           # 构建目录
+        '.pytest_cache'   # Python 测试缓存
+        '.next'           # Next.js 构建输出
+        'target'          # Rust/Java 构建输出
+        '.gradle'         # Gradle 构建缓存
+        '.idea'           # IntelliJ 配置
+        '.vscode'         # VSCode 配置
+    )
+
+    # 列出要删除的文件名称
+    local files_to_clean=(
+        '.DS_Store'       # macOS 目录属性文件
+        'Thumbs.db'       # Windows 缩略图缓存
+        '*.pyc'          # Python 编译文件
+        '*.pyo'          # Python 优化文件
+        '._.DS_Store'    # macOS 目录属性文件
+        '._*'            # macOS 文件属性
+    )
+
+    local found_dirs=()
+    local found_files=()
+    local total_dir_count=0
+    local total_file_count=0
+
+    setopt local_options null_glob
+
+    # 查找目录
+    echo "${BOLD}将要清理的目录统计：${NC}"
+    for target in "${dirs_to_clean[@]}"; do
+        local current_count=0
+        local paths=(./"$target"(/) */"$target"(/))
+        
+        for path in $paths; do
+            found_dirs+=("$path")
+            ((current_count++))
+            ((total_dir_count++))
+        done
+        
+        if (( current_count > 0 )); then
+            echo "${BLUE}-${NC} ${CYAN}$target${NC}: ${YELLOW}$current_count${NC} 个"
+        fi
+    done
+
+    # 查找文件
+    echo "\n${BOLD}将要清理的文件统计：${NC}"
+    for pattern in "${files_to_clean[@]}"; do
+        local current_count=0
+        local files=(./"$pattern"(.) */"$pattern"(.))
+        
+        for file in $files; do
+            found_files+=("$file")
+            ((current_count++))
+            ((total_file_count++))
+        done
+        
+        if (( current_count > 0 )); then
+            echo "${BLUE}-${NC} ${CYAN}$pattern${NC}: ${YELLOW}$current_count${NC} 个"
+        fi
+    done
+
+    if (( total_dir_count == 0 && total_file_count == 0 )); then
+        echo "${GREEN}没有找到需要清理的内容${NC}"
+        return
+    fi
+
+    # 显示找到的内容
+    if (( total_dir_count > 0 )); then
+        echo "\n${BOLD}找到以下目录：${NC}"
+        for dir in "${found_dirs[@]}"; do
+            echo "    ${BLUE}$dir${NC}"
+        done
+    fi
+
+    if (( total_file_count > 0 )); then
+        echo "\n${BOLD}找到以下文件：${NC}"
+        for file in "${found_files[@]}"; do
+            echo "    ${MAGENTA}$file${NC}"
+        done
+    fi
+
+    echo "\n${YELLOW}是否删除这些内容？${NC}${BOLD}(y/N)${NC} "
+    read -r response
+
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        echo "\n${BOLD}开始清理...${NC}"
+        local deleted_count=0
+
+        # 删除目录
+        for dir in "${found_dirs[@]}"; do
+            echo "    ${RED}✗${NC} ${dir}"
+            /bin/rm -rf "$dir"
+            ((deleted_count++))
+        done
+
+        # 删除文件
+        for file in "${found_files[@]}"; do
+            echo "    ${RED}✗${NC} ${file}"
+            /bin/rm -f "$file"
+            ((deleted_count++))
+        done
+
+        echo "\n${GREEN}清理完成！${NC}共删除 ${YELLOW}$deleted_count${NC} 个项目"
+    else
+        echo "${MAGENTA}操作已取消${NC}"
+    fi
+}
+
+clean_dev_dirs
